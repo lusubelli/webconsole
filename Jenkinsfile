@@ -9,8 +9,8 @@ pipeline {
         }
         stage('Build Docker Image') {
             steps {
-                sh 'chmod +x accounting.sh'
-                sh 'accounting.sh'
+                sh 'chmod +x ./accounting.sh'
+                sh './accounting.sh'
             }
         }
     }
