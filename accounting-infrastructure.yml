@@ -15,3 +15,11 @@ services:
     image: 127.0.0.1:5000/accounting-dev/user-api:1.0.0
     ports:
       - 8585:8585
+  organization-api:
+    image: 127.0.0.1:5000/accounting-dev/organization-api:1.0.0
+    ports:
+      - 8686:8686
+  backend:
+    image: 127.0.0.1:5000/accounting-dev/backend:1.0.0
+    ports:
+      - 8080:8080
