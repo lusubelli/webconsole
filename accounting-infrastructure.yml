@@ -13,17 +13,26 @@ services:
     command: mongod --logpath=/dev/null # --quiet
   user-api:
     image: 127.0.0.1:5000/accounting-dev/user-api:1.0.0
+    depends_on:
+      - mongodb
     ports:
       - 8585:8585
   organization-api:
     image: 127.0.0.1:5000/accounting-dev/organization-api:1.0.0
+    depends_on:
+      - mongodb
     ports:
       - 8686:8686
   backend:
     image: 127.0.0.1:5000/accounting-dev/backend:1.0.0
+    depends_on:
+      - user-api
+      - organization-api
     ports:
       - 8181:8080
   frontend:
     image: 127.0.0.1:5000/accounting-dev/frontend:1.0.0
+    depends_on:
+      - backend
     ports:
       - 80:80
