@@ -24,6 +24,6 @@ services:
     ports:
       - 8181:8080
   frontend:
-    image: 127.0.0.1:5000/accounting-dev/backend:1.0.0
+    image: 127.0.0.1:5000/accounting-dev/frontend:1.0.0
     ports:
       - 80:80
