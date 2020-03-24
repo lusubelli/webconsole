@@ -15,26 +15,15 @@ services:
     image: 127.0.0.1:5000/accounting-dev/user-api:1.0.0
     ports:
       - 8585:8585
-    networks:
-      - external-net
   organization-api:
     image: 127.0.0.1:5000/accounting-dev/organization-api:1.0.0
     ports:
       - 8686:8686
-    networks:
-      - external-net
   backend:
     image: 127.0.0.1:5000/accounting-dev/backend:1.0.0
     ports:
       - 8181:8080
-    networks:
-      - external-net
   frontend:
     image: 127.0.0.1:5000/accounting-dev/frontend:1.0.0
     ports:
       - 80:80
-    networks:
-      - external-net
-networks:
-  external-net:
-    external: true
