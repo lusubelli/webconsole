@@ -11,7 +11,7 @@ pipeline {
             steps {
                 sh 'docker-compose -f accounting-infrastructure.yml rm -f'
                 sh 'docker-compose -f accounting-infrastructure.yml up -d'
-                sh 'docker-compose -f accounting-infrastructure.yml logs --no-color >& logs.txt'
+                sh 'docker-compose -f accounting-infrastructure.yml logs --no-color > logs.txt'
             }
         }
     }
