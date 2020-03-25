@@ -32,7 +32,5 @@ services:
       - 8181:8181
   frontend:
     image: 127.0.0.1:5000/accounting-dev/frontend:1.0.0
-    depends_on:
-      - backend
     ports:
       - 80:80
