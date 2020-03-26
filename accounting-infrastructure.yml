@@ -34,3 +34,11 @@ services:
     image: 127.0.0.1:5000/accounting-dev/frontend:1.0.0
     ports:
       - 80:80
+  webconsole:
+    image: 127.0.0.1:5000/accounting-dev/webconsole:1.0.0
+    volumes:
+      - logs-directory:/var/lib/accounting/logs
+    ports:
+      - 9000:9000
+volumes:
+  logs-directory:
