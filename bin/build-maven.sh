@@ -6,8 +6,8 @@ export GIT_BRANCH="$5"
 export STAGING="$6"
 export BUILD_PATH="$7"
 
-export JAVA_HOME=./tools/jdk-13.0.2
-export MAVEN_HOME=./tools/apache-maven-3.6.3
+export JAVA_HOME=~/webconsole/tools/jdk-13.0.2
+export MAVEN_HOME=~/webconsole/tools/apache-maven-3.6.3
 
 export NEXUS_REPOSITORY_URL=http://localhost:8081
 export NEXUS_REPOSITORY="snapshots"

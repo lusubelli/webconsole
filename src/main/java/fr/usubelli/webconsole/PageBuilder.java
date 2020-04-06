@@ -20,9 +20,9 @@ class PageBuilder {
 
     private final Configuration cfg;
 
-    PageBuilder() throws IOException {
+    PageBuilder(File templateFolder) throws IOException {
         this.cfg = new Configuration(freemarker.template.Configuration.VERSION_2_3_29);
-        this.cfg.setDirectoryForTemplateLoading(new File("src/main/resources/ftlh"));
+        this.cfg.setDirectoryForTemplateLoading(templateFolder);
         this.cfg.setDefaultEncoding("UTF-8");
         this.cfg.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
         this.cfg.setLogTemplateExceptions(false);

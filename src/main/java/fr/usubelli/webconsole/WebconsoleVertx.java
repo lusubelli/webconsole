@@ -12,8 +12,6 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.CorsHandler;
-import org.apache.commons.exec.CommandLine;
-import org.apache.commons.exec.DefaultExecutor;
 import org.apache.commons.exec.ExecuteException;
 
 import java.io.File;
@@ -27,17 +25,14 @@ public class WebconsoleVertx implements VertxMicroService {
 
     private static final String APPLICATION_JSON = "application/json";
     private final ObjectMapper objectMapper;
+    private final File buildFolder;
     private ProjectRepository projectRepository;
     private PageBuilder pageBuilder;
-    private String buildDirectory = "C:\\dev\\continous-building";
+    //private String buildDirectory = "C:\\dev\\continous-building";
 
-    public WebconsoleVertx(ObjectMapper objectMapper, PageBuilder pageBuilder) {
-        final File buildFolder = new File(buildDirectory);
-        if (!buildFolder.exists()) {
-            buildFolder.mkdirs();
-        }
-
+    public WebconsoleVertx(ObjectMapper objectMapper, PageBuilder pageBuilder, File buildFolder) {
         this.objectMapper = objectMapper;
+        this.buildFolder = buildFolder;
         this.projectRepository = new ProjectRepository(buildFolder, objectMapper);
         this.pageBuilder = pageBuilder;
     }
@@ -213,7 +208,7 @@ public class WebconsoleVertx implements VertxMicroService {
 
                 final BuildDto build = projectRepository.createBuild(projectName, jobName, job.getProperties());
 
-                new MavenBuild(buildDirectory, build.getProperties())
+                new MavenBuild(buildFolder.getAbsolutePath(), build.getProperties())
                         .startBuild()
                         .subscribe(
                             success -> {
@@ -256,7 +251,7 @@ public class WebconsoleVertx implements VertxMicroService {
                 return;
             }
 
-            File logFile = new File(buildDirectory + "\\" + projectName + "\\" + jobName + "\\#" + build.getNumber() +"\\logs.log");
+            File logFile = new File(buildFolder.getAbsolutePath() + "\\" + projectName + "\\" + jobName + "\\#" + build.getNumber() +"\\logs.log");
 
             Observable.<String>create(emitter -> {
                 new Thread(() -> {

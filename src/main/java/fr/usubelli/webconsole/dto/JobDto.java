@@ -22,10 +22,6 @@ public class JobDto {
         this.properties = properties;
     }
 
-    public boolean addBuild(BuildDto build) {
-        return this.builds.add(build);
-    }
-
     public String getName() {
         return name;
     }

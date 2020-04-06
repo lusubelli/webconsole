@@ -8,7 +8,6 @@ import fr.usubelli.webconsole.dto.ProjectDto;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -79,7 +78,7 @@ public class ProjectRepository {
             jobFolder.mkdirs();
         }
         try {
-            objectMapper.writeValue(new File(jobFolder, "definition.json"), new ArrayList<>());
+            objectMapper.writeValue(new File(jobFolder, "definition.json"), job.getProperties());
         } catch (IOException e) {
             e.printStackTrace();
         }

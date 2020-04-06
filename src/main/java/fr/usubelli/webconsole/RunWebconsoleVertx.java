@@ -7,11 +7,12 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.apache.commons.cli.ParseException;
 
+import java.io.File;
 import java.io.IOException;
 
 public class RunWebconsoleVertx {
 
-    private static final String DEFAULT_APPLICATION_CONF = "src/main/resources/application.conf";
+    private static final String DEFAULT_APPLICATION_CONF = "src/main/resources/config/application.conf";
     private static final Logger LOGGER = LoggerFactory.getLogger(RunWebconsoleVertx.class);
 
     public static void main(String[] args) {
@@ -35,12 +36,17 @@ public class RunWebconsoleVertx {
 
         PageBuilder pageBuilder = null;
         try {
-            pageBuilder = new PageBuilder();
+            pageBuilder = new PageBuilder(new File(System.getProperty("user.home") + "/webconsole/bin/ftlh"));
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        final VertxMicroService microService = new WebconsoleVertx(serverObjectMapper, pageBuilder);
+        final File buildFolder = new File(System.getProperty("user.home") + "/webconsole/builds");
+        if (!buildFolder.exists()) {
+            buildFolder.mkdirs();
+        }
+        final VertxMicroService microService = new WebconsoleVertx(serverObjectMapper, pageBuilder,
+                buildFolder);
 
         VertxServer.create(
                 new MicroServiceConfiguration(configuration.getInt("http.port", 8080))

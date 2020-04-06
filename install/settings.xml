@@ -1,5 +1,5 @@
 <settings>
-    <localRepository>./.m2/repository</localRepository>
+    <localRepository>~/webconsole/repositories/.m2/repository</localRepository>
     <servers>
         <server>
             <id>snapshots</id>
