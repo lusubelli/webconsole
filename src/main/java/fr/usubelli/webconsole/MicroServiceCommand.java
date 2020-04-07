@@ -35,13 +35,17 @@ public class MicroServiceCommand {
 
         String configPath = cmd.getOptionValue("config", defaultConfigurationPath);
 
-        if (!new File(configPath).exists()) {
-            return null;
+        LOGGER.info(String.format("Trying to load configuration %s", configPath));
+
+        final File configFile = new File(configPath);
+        if (!configFile.exists()) {
+            LOGGER.warn("Empty config was loaded");
+            return new Configuration(ConfigFactory.empty());
         }
 
-        LOGGER.info(String.format("Loading config from %s", configPath));
+        LOGGER.info(String.format("Config %s loaded", configPath));
 
-        return new Configuration(ConfigFactory.parseFile(new File(configPath)).resolve());
+        return new Configuration(ConfigFactory.parseFile(configFile).resolve());
 
     }
 }

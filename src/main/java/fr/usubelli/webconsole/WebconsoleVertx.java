@@ -28,11 +28,13 @@ public class WebconsoleVertx implements VertxMicroService {
     private final File buildFolder;
     private ProjectRepository projectRepository;
     private PageBuilder pageBuilder;
+    private final File binFolder;
     //private String buildDirectory = "C:\\dev\\continous-building";
 
-    public WebconsoleVertx(ObjectMapper objectMapper, PageBuilder pageBuilder, File buildFolder) {
+    public WebconsoleVertx(ObjectMapper objectMapper, PageBuilder pageBuilder, File binFolder, File buildFolder) {
         this.objectMapper = objectMapper;
         this.buildFolder = buildFolder;
+        this.binFolder = binFolder;
         this.projectRepository = new ProjectRepository(buildFolder, objectMapper);
         this.pageBuilder = pageBuilder;
     }
@@ -208,7 +210,7 @@ public class WebconsoleVertx implements VertxMicroService {
 
                 final BuildDto build = projectRepository.createBuild(projectName, jobName, job.getProperties());
 
-                new MavenBuild(buildFolder.getAbsolutePath(), build.getProperties())
+                new MavenBuild(binFolder.getPath(), buildFolder.getAbsolutePath(), build.getProperties())
                         .startBuild()
                         .subscribe(
                             success -> {

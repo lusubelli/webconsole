@@ -129,10 +129,10 @@
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${project.build.directory}/ftlh</outputDirectory>
+                            <outputDirectory>${project.build.directory}/resources</outputDirectory>
                             <resources>
                                 <resource>
-                                    <directory>src/main/resources/ftlh</directory>
+                                    <directory>src/main/resources</directory>
                                 </resource>
                             </resources>
                         </configuration>
@@ -150,6 +150,23 @@
                         </manifest>
                     </archive>
                 </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>bin</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>assembly.xml</descriptor>
+                            </descriptors>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

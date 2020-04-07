@@ -11,10 +11,12 @@ public class MavenBuild {
 
     private final String buildDirectory;
     private final Map<String, String> properties;
+    private final String binFolderPath;
 
-    public MavenBuild(String buildDirectory, Map<String, String> properties) {
+    public MavenBuild(String binFolderPath, String buildDirectory, Map<String, String> properties) {
         this.buildDirectory = buildDirectory;
         this.properties = properties;
+        this.binFolderPath = binFolderPath;
     }
 
     public Observable<Object> startBuild() {
@@ -34,7 +36,7 @@ public class MavenBuild {
         joiner.add(staging);
         joiner.add(buildDirectory);
 
-        String command = "sh ./bin/build-maven.sh" + " " + joiner.toString();
+        String command = "sh ./" + binFolderPath + "/build-maven.sh" + " " + joiner.toString();
         return Observable.create(emitter -> {
             new Thread(() -> {
                 CommandLine oCmdLine = CommandLine

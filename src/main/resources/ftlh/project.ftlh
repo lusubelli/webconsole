@@ -59,7 +59,14 @@
                         var project = JSON.parse(xhttp.responseText);
                         var output = "";
                         for (var job in project.jobs) {
-                            output += "<a href='/html/project/" + projectName + "/job/" + project.jobs[job].name + "'>" + project.jobs[job].name + "</a></br>";
+                            if (project.jobs[job].builds.length > 0) {
+                                output += "#" + project.jobs[job].builds[project.jobs[job].builds.length -1].number;
+                                output += " ";
+                                output += project.jobs[job].builds[project.jobs[job].builds.length -1].state;
+                            } else {
+                                output += "No build";
+                            }
+                            output += " <a href='/html/project/" + projectName + "/job/" + project.jobs[job].name + "'>" + project.jobs[job].name + "</a></br>";
                         }
                         document.getElementById("jobs").innerHTML = output;
                     }

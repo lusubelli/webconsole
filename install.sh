@@ -62,5 +62,3 @@ echo ===================================
 echo "------------- WEBCONSOLE -------------"
 
 ./install/install-webconsole.sh
-
-$HOME/webconsole.sh

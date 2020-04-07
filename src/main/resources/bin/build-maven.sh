@@ -13,17 +13,16 @@ export NEXUS_REPOSITORY_URL=http://localhost:8081
 export NEXUS_REPOSITORY="snapshots"
 export NEXUS_USERNAME="admin"
 export NEXUS_PASSWORD="admin123"
-
 export VERSION="1.0-SNAPSHOT"
+export POM_FILE=pom.xml
+export DOCKER_IMAGE_VERSION=1.0.0
+export DOCKER_FILE_NAME=Dockerfile
+
 
 export MAVEN_BUILD_PATH="$BUILD_PATH/$PROJECT_NAME/$JOB_NAME/maven"
 export DOCKER_BUILD_PATH="$BUILD_PATH/$PROJECT_NAME/$JOB_NAME/docker"
 export LOGFILE_PATH="$BUILD_PATH/$PROJECT_NAME/$JOB_NAME/#$BUILD_NUMBER/logs.log"
 
-export POM_FILE=pom.xml
-
-export DOCKER_IMAGE_VERSION=1.0.0
-export DOCKER_FILE_NAME=Dockerfile
 
 ARTIFACT="$JOB_NAME-$VERSION"
 ARCHIVE="${ARTIFACT}-bin.zip"
@@ -36,14 +35,9 @@ echo "------> Cloning the sources" &> $LOGFILE_PATH
 git clone --progress -b $GIT_BRANCH $GIT_REPOSITORY $MAVEN_BUILD_PATH >> $LOGFILE_PATH
 
 
-
 echo "------> Building the application from sources and push it into repository" >> $LOGFILE_PATH
 $MAVEN_HOME/bin/mvn --version >> $LOGFILE_PATH
-$MAVEN_HOME/bin/mvn -DaltDeploymentRepository=$NEXUS_REPOSITORY::default::$NEXUS_REPOSITORY_URL/repository/$NEXUS_REPOSITORY -s ./install/settings.xml clean deploy -f $MAVEN_BUILD_PATH/$POM_FILE >> $LOGFILE_PATH
-
-
-
-
+$MAVEN_HOME/bin/mvn -DaltDeploymentRepository=$NEXUS_REPOSITORY::default::$NEXUS_REPOSITORY_URL/repository/$NEXUS_REPOSITORY -s $MAVEN_HOME/conf/settings.xml clean deploy -f $MAVEN_BUILD_PATH/$POM_FILE >> $LOGFILE_PATH
 
 
 echo "------> Downloading the application from the repository" >> $LOGFILE_PATH
@@ -58,6 +52,8 @@ else
     echo "Something went wrong" >> $LOGFILE_PATH
 fi
 echo "Done!" >> $LOGFILE_PATH
+
+echo "------> Buildind the docker image and push it into repository" >> $LOGFILE_PATH
 
 docker login -u $NEXUS_USERNAME -p $NEXUS_PASSWORD $NEXUS_REPOSITORY_URL
 docker build -t $NEXUS_REPOSITORY_URL/$NEXUS_REPOSITORY/$JOB_NAME:$DOCKER_IMAGE_VERSION $DOCKER_BUILD_PATH
