@@ -10,7 +10,6 @@ if [ ! -d "$TOOLS/${MAVEN_VERSION}" ]; then
     fi
 
     tar -zxvf $TOOLS/$MAVEN_VERSION-bin.tar.gz -C $TOOLS
-    cp -rf ./install/settings.xml $TOOLS/$MAVEN_VERSION/conf/settings.xml
     rm -rf $TOOLS/$MAVEN_VERSION-bin.tar.gz
 
 fi

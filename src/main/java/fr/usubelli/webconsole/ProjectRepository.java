@@ -1,6 +1,5 @@
 package fr.usubelli.webconsole;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.usubelli.webconsole.dto.BuildDto;
 import fr.usubelli.webconsole.dto.JobDto;
@@ -78,7 +77,7 @@ public class ProjectRepository {
             jobFolder.mkdirs();
         }
         try {
-            objectMapper.writeValue(new File(jobFolder, "definition.json"), job.getProperties());
+            objectMapper.writeValue(new File(jobFolder, "definition.json"), job);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -139,13 +138,13 @@ public class ProjectRepository {
         return Stream.of(projectFolder.listFiles())
                 .filter(File::isDirectory)
                 .map(jobFolder -> {
-                    Map<String, String> properties = new HashMap<>();
+                    JobDto job = null;
                     try {
-                        properties = objectMapper.readValue(new File(jobFolder, "definition.json"), new TypeReference<Map<String, String>>(){});
+                        job = objectMapper.readValue(new File(jobFolder, "definition.json"), JobDto.class);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                    return new JobDto(jobFolder.getName(), builds(jobFolder), properties);
+                    return new JobDto(job.getName(), job.getType(), builds(jobFolder), job.getProperties());
 
                 })
                 .collect(Collectors.toList());
@@ -167,4 +166,7 @@ public class ProjectRepository {
                 .collect(Collectors.toList());
     }
 
+    public String getLogFilePath(String projectName, String jobName, int buildNumber) {
+        return buildFolder.getAbsolutePath() + "\\" + projectName + "\\" + jobName + "\\#" + buildNumber +"\\logs.log";
+    }
 }

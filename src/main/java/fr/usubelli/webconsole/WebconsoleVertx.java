@@ -17,6 +17,7 @@ import org.apache.commons.exec.ExecuteException;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -25,15 +26,12 @@ public class WebconsoleVertx implements VertxMicroService {
 
     private static final String APPLICATION_JSON = "application/json";
     private final ObjectMapper objectMapper;
-    private final File buildFolder;
     private ProjectRepository projectRepository;
     private PageBuilder pageBuilder;
     private final File binFolder;
-    //private String buildDirectory = "C:\\dev\\continous-building";
 
     public WebconsoleVertx(ObjectMapper objectMapper, PageBuilder pageBuilder, File binFolder, File buildFolder) {
         this.objectMapper = objectMapper;
-        this.buildFolder = buildFolder;
         this.binFolder = binFolder;
         this.projectRepository = new ProjectRepository(buildFolder, objectMapper);
         this.pageBuilder = pageBuilder;
@@ -210,26 +208,31 @@ public class WebconsoleVertx implements VertxMicroService {
 
                 final BuildDto build = projectRepository.createBuild(projectName, jobName, job.getProperties());
 
-                new MavenBuild(binFolder.getPath(), buildFolder.getAbsolutePath(), build.getProperties())
-                        .startBuild()
-                        .subscribe(
-                            success -> {
-                                System.out.println("Task success");
-                            }, error -> {
-                                System.out.println("Job error");
-                                if (error instanceof ExecuteException) {
-                                    System.err.println("Job error : Execution failed.");
-                                } else if (error instanceof IOException) {
-                                    System.err.println("Job error : Permission denied.");
-                                } else if (error instanceof Exception) {
-                                    System.err.println("Job error : " + error.getMessage());
-                                }
-                                projectRepository.updateBuild(projectName, jobName, new BuildDto(build.getNumber(), BuildDto.State.ERROR, build.getProperties()));
-                            },
-                            () -> {
-                                System.out.println("Job success");
-                                projectRepository.updateBuild(projectName, jobName, new BuildDto(build.getNumber(), BuildDto.State.SUCCESS, build.getProperties()));
-                            });
+                List<ShellCommand> commands = new ArrayList<>();
+
+                commands.add(new ShellCommand("sh " + binFolder.getPath() + "/clone-source.sh", new String[] {
+                        build.getProperties().get("project.name"),
+                        build.getProperties().get("job.name"),
+                        build.getProperties().get("build.number"),
+                        build.getProperties().get("git.repository"),
+                        build.getProperties().get("git.branch")}));
+                if(job.getType().equals("maven")) {
+                    commands.add(new ShellCommand("sh " + binFolder.getPath() + "/build-maven.sh", new String[] {
+                            build.getProperties().get("project.name"),
+                            build.getProperties().get("job.name"),
+                            build.getProperties().get("build.number")}));
+                } else if (job.getType().equals("node")) {
+                    commands.add(new ShellCommand("sh " + binFolder.getPath() + "/build-node.sh", new String[] {
+                            build.getProperties().get("project.name"),
+                            build.getProperties().get("job.name"),
+                            build.getProperties().get("build.number")}));
+                }
+                commands.add(new ShellCommand("sh " + binFolder.getPath() + "/build-docker.sh", new String[] {
+                        build.getProperties().get("project.name"),
+                        build.getProperties().get("job.name"),
+                        build.getProperties().get("build.number")}));
+
+                runCommand(projectName, jobName, build, commands, commands.remove(0));
 
             }
 
@@ -238,6 +241,32 @@ public class WebconsoleVertx implements VertxMicroService {
         };
     }
 
+    private void runCommand(String projectName, String jobName, BuildDto build, List<ShellCommand> commands,
+            ShellCommand command) {
+        command
+                .run()
+                .subscribe(
+                    success -> {
+                        System.out.println("Task success");
+                    }, error -> {
+                        System.out.println("Job error");
+                        if (error instanceof ExecuteException) {
+                            System.err.println("Job error : Execution failed.");
+                        } else if (error instanceof IOException) {
+                            System.err.println("Job error : Permission denied.");
+                        } else if (error instanceof Exception) {
+                            System.err.println("Job error : " + error.getMessage());
+                        }
+                        projectRepository.updateBuild(projectName, jobName, new BuildDto(build.getNumber(), BuildDto.State.ERROR, build.getProperties()));
+                    },
+                    () -> {
+                        if (commands.isEmpty()) {
+                            projectRepository.updateBuild(projectName, jobName, new BuildDto(build.getNumber(), BuildDto.State.SUCCESS, build.getProperties()));
+                        } else {
+                            runCommand(projectName, jobName, build, commands, commands.remove(0));
+                        }
+                    });
+    }
 
     private Handler<RoutingContext> readBuildLogs() {
         return routingContext -> {
@@ -253,11 +282,9 @@ public class WebconsoleVertx implements VertxMicroService {
                 return;
             }
 
-            File logFile = new File(buildFolder.getAbsolutePath() + "\\" + projectName + "\\" + jobName + "\\#" + build.getNumber() +"\\logs.log");
 
             Observable.<String>create(emitter -> {
                 new Thread(() -> {
-                    long lastKnownPosition = 0;
                     while (!routingContext.response().closed()) {
 
                         try {
@@ -266,6 +293,8 @@ public class WebconsoleVertx implements VertxMicroService {
                             e.printStackTrace();
                         }
 
+                        File logFile = new File(projectRepository.getLogFilePath(projectName, jobName, Integer.parseInt(buildNumber)));
+                        long lastKnownPosition = 0;
                         try {
 
                             long fileLength = logFile.length();

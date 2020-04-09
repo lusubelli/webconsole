@@ -41,16 +41,24 @@ public class RunWebconsoleVertx {
             return;
         }
 
-        final String buildFolderPath = System.getProperty("user.home") + "/webconsole/builds";
+        if (System.getenv("WEBCONSOLE") == null) {
+            LOGGER.error("Missing environment variable WEBCONSOLE");
+            System.exit(1);
+            return;
+        }
+
+        final String buildFolderPath = System.getenv("WEBCONSOLE") + "/builds";
 
         final File buildFolder = new File(buildFolderPath);
         if (!buildFolder.exists()) {
             buildFolder.mkdirs();
         }
 
+        LOGGER.info(String.format("Build folder was initialized in %s", buildFolderPath));
+
         final String binFolderPath = configuration.getString("bin", "src/main/resources/bin");
 
-        LOGGER.info(String.format("Build folder was initialized in %s", buildFolderPath));
+        LOGGER.info(String.format("Bin folder was initialized in %s", binFolderPath));
 
         final VertxMicroService microService = new WebconsoleVertx(serverObjectMapper, pageBuilder,
                 new File(binFolderPath),

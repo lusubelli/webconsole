@@ -9,6 +9,10 @@
 
         <form id="create-job" action="" onsubmit="return createJob('${project.name}')">
             <input id="name" type="text" name="name" placeholder="Job Name"/><br/>
+            <select id="type" name="type">
+                <option value="maven">Maven</option>
+                <option value="node">Node</option>
+            </select><br/>
             <input id="repository" type="text" name="repository" placeholder="Git repository"/><br/>
             <input id="branch" type="text" name="branch" placeholder="Git branch"/><br/>
             <input type="hidden" name="builds" value="[]"/>
@@ -39,6 +43,7 @@
             function createJob(projectName) {
                 var job = {
                     name: document.getElementById("name").value,
+                    type: document.getElementById("type").value,
                     properties: {
                         "git.repository": document.getElementById("repository").value,
                         "git.branch": document.getElementById("branch").value
