@@ -1,6 +1,6 @@
 
 if [ ! -d "${REPOSITORIES}/nexus" ]; then
-    mkdir -p "${REPOSITORIES}/nexus"
+    mkdir -p "${REPOSITORIES}/nexus" && sudo chown -R 200 "${REPOSITORIES}/nexus"
 fi
 
 if [ -x "$(command -v docker)" ]; then
