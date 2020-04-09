@@ -1,9 +1,9 @@
 
-if [ ! -d ${REPOSITORIES}/.npm ]; then
-     mkdir -p ${REPOSITORIES}/.npm && chown -R 200 ${REPOSITORIES}/.npm
+if [ ! -d "${REPOSITORIES}/npm" ]; then
+     mkdir -p "${REPOSITORIES}/npm"
 fi
 
-if [ ! -d "$TOOLS/${NPM_VERSION}-win-x64" ]; then
+if [ ! -d "$TOOLS/${NPM_VERSION}-win-x64" ] && [ ! -d "$TOOLS/${NPM_VERSION}-linux-x64" ]; then
 
     case "$OSTYPE" in
         linux-gnu)
@@ -21,8 +21,8 @@ if [ ! -d "$TOOLS/${NPM_VERSION}-win-x64" ]; then
         wget ${NPM_REPOSITORY}/${ARCHIVE} -P $TOOLS
     fi
 
-    if [ "$OS" == "linux" ]; then
-        tar -zxvf $TOOLS/$ARCHIVE -C $TOOLS
+    if [ "$OSTYPE" == "linux-gnu" ]; then
+        tar xvf $TOOLS/$ARCHIVE -C $TOOLS
     else
         unzip $TOOLS/$ARCHIVE -d $TOOLS
     fi

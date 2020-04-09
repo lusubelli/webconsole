@@ -18,7 +18,9 @@ export NPM_REPOSITORY=https://nodejs.org/dist/v12.16.1
 chmod +x ./install/install-jdk.sh
 chmod +x ./install/install-maven.sh
 chmod +x ./install/install-docker.sh
+chmod +x ./install/install-node.sh
 chmod +x ./install/install-nexus.sh
+chmod +x ./install/install-webconsole.sh
 
 echo ===================================
 echo $JDK_VERSION
@@ -44,19 +46,27 @@ echo ===================================
 echo "------------- NODE -------------"
 
 ./install/install-node.sh
-export NPM_HOME=$TOOLS/node-v12.16.1-win-x64
+
+case "$OSTYPE" in
+	linux-gnu)
+	    NODE_HOME=node-v12.16.1-linux-x64/bin
+	    ;;
+	msys)
+	    NODE_HOME=node-v12.16.1-win-x64
+	    ;;
+	*)
+	    echo "Sorry, I don't understand"
+	    ;;
+	esac
+export NPM_HOME=$TOOLS/$NODE_HOME
 $NPM_HOME/node -v
 
 echo ===================================
 echo "------------- DOCKER -------------"
 
 ./install/install-docker.sh
-if command -v docker 2>/dev/null; then
-    docker -v
-    docker-compose -v
-else
-    echo "Docker not installed !!!"
-fi
+docker -v
+docker-compose -v
 
 echo ===================================
 echo "------------- NEXUS -------------"

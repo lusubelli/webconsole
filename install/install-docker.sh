@@ -1,6 +1,9 @@
 
-if command -v sudo 2>/dev/null; then
+if [ -x "$(command -v docker)" ]; then
 
+    echo docker already installed
+
+else
 
     sudo apt-get update
 

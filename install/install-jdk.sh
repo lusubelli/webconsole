@@ -19,7 +19,7 @@ if [ ! -d "$TOOLS/$JDK" ]; then
         wget ${JDK_REPOSITORY}/${ARCHIVE} -P $TOOLS
     fi
 
-    if [ "$OS" == "linux" ]; then
+    if [ "$OSTYPE" == "linux-gnu" ]; then
         tar -zxvf $TOOLS/$ARCHIVE -C $TOOLS
     else
         unzip $TOOLS/$ARCHIVE -d $TOOLS

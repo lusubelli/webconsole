@@ -1,6 +1,6 @@
 
-if [ ! -d ${REPOSITORIES}/.m2 ]; then
-     mkdir -p ${REPOSITORIES}/.m2 && chown -R 200 ${REPOSITORIES}/.m2
+if [ ! -d "${REPOSITORIES}/m2" ]; then
+     mkdir -p "${REPOSITORIES}/m2"
 fi
 
 if [ ! -d "$TOOLS/${MAVEN_VERSION}" ]; then
