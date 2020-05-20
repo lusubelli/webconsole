@@ -1,0 +1,22 @@
+<header class="navbar-header">
+  <a href="#" class="brand-logo">Brand-name</a>
+</header>
+<main class="navbar-body" *ngIf="_navigationLinks as navigationLinks">
+  <ul>
+    <li class="nav-item" *ngFor="let navigationLink of navigationLinks; index as index"
+      [class.nav-item-active]="isElementActive(navigationLink.route)">
+      <div class="ds-tooltip fa-stack element__alert" *ngIf="navigationLink.notificationNumber">
+        <i class="fa fa-circle fa-stack-2x fa-inverse ds-tooltip__icon"></i>
+        <strong class="fa-stack-1x">{{navigationLink.notificationNumber}}</strong>
+        <span class="ds-tooltip__text ds-tooltip__text--top" *ngIf="navigationLink.notificationTooltip">{{ navigationLink.notificationTooltip }}</span>
+      </div>
+      <div>
+        <a [routerLink]="navigationLink.route">
+          <i class="{{navigationLink.icon}}"></i>
+          {{navigationLink.label}}
+        </a>
+      </div>
+    </li>
+  </ul>
+</main>
+

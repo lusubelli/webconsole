@@ -1,0 +1,51 @@
+.layer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
+  & .layer-banner {
+    height: 75px;
+    display: flex;
+    align-items: center;
+  }
+  & .layer-middle {
+    flex: auto;
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    height: calc(100% - 75px - 21px);
+
+    & .layer-sidebar {
+      visibility: visible;
+    }
+    & .layer-content {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      flex: auto;
+
+      & .layer-page {
+        min-height: calc(100% - 60px);
+        max-height: calc(100% - 60px);
+        overflow: auto;
+      }
+
+      & .layer-footer {
+        display: flex;
+        justify-content: center;
+      }
+
+    }
+  }
+  & #burger-menu-button {
+    display: none;
+
+    &:checked~.layer-sidebar {
+      width: 0;
+    }
+    &:checked~.layer-sidebar * {
+      visibility: hidden;
+    }
+  }
+}
+

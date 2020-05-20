@@ -1,0 +1,37 @@
+[
+  {
+    "type": "maven",
+    "version": "apache-maven-3.6.3",
+    "os": "linux|windows",
+    "url": "http://apache.crihan.fr/dist/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz",
+    "archive": "apache-maven-3.6.3-bin.tar.gz"
+  },
+  {
+    "type": "maven",
+    "version": "apache-maven-3.5.0",
+    "os": "linux|windows",
+    "url": "https://archive.apache.org/dist/maven/maven-3/3.5.0/binaries/apache-maven-3.5.0-bin.tar.gz",
+    "archive": "apache-maven-3.5.0-bin.tar.gz"
+  },
+  {
+    "type": "maven",
+    "version": "apache-maven-3.1.0",
+    "os": "linux|windows",
+    "url": "https://archive.apache.org/dist/maven/maven-3/3.1.0/binaries/apache-maven-3.1.0-bin.tar.gz",
+    "archive": "apache-maven-3.1.0-bin.tar.gz"
+  },
+  {
+    "type": "java",
+    "version": "jdk-14",
+    "os": "windows",
+    "url": "https://download.java.net/java/GA/jdk14/076bab302c7b4508975440c56f6cc26a/36/GPL/openjdk-14_windows-x64_bin.zip",
+    "archive": "openjdk-14_windows-x64_bin.zip"
+  },
+  {
+    "type": "java",
+    "version": "jdk-14",
+    "os": "linux",
+    "url": "https://download.java.net/java/GA/jdk14/076bab302c7b4508975440c56f6cc26a/36/GPL/openjdk-14_linux-x64_bin.tar.gz",
+    "archive": "openjdk-14_linux-x64_bin.tar.gz"
+  }
+]

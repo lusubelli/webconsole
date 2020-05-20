@@ -1,23 +1,37 @@
 package fr.usubelli.webconsole;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import fr.usubelli.webconsole.dto.*;
+import fr.usubelli.webconsole.common.VertxMicroService;
+import fr.usubelli.webconsole.job.build.RunBuild;
+import fr.usubelli.webconsole.job.build.RunBuildException;
+import fr.usubelli.webconsole.job.build.dto.RunBuildDto;
+import fr.usubelli.webconsole.job.create.CreateJob;
+import fr.usubelli.webconsole.job.create.CreateJobException;
+import fr.usubelli.webconsole.job.create.dto.CreateJobDto;
+import fr.usubelli.webconsole.job.list.ListJobs;
+import fr.usubelli.webconsole.job.list.ListJobsException;
+import fr.usubelli.webconsole.job.list.dto.JobDto;
+import fr.usubelli.webconsole.repository.create.CreateOrUpdateRepository;
+import fr.usubelli.webconsole.repository.create.CreateRepositoryException;
+import fr.usubelli.webconsole.repository.create.dto.CreateRepositoryDto;
+import fr.usubelli.webconsole.repository.list.ListRepositories;
+import fr.usubelli.webconsole.repository.list.ListRepositoriesException;
+import fr.usubelli.webconsole.repository.list.dto.RepositoryDto;
+import fr.usubelli.webconsole.tool.list.ListToolException;
+import fr.usubelli.webconsole.tool.list.ListTools;
+import fr.usubelli.webconsole.tool.ToolDto;
 import io.reactivex.Observable;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpMethod;
-import io.vertx.core.http.HttpServerResponse;
 import io.vertx.ext.auth.jwt.JWTAuth;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.CorsHandler;
-import org.apache.commons.exec.ExecuteException;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -26,15 +40,21 @@ public class WebconsoleVertx implements VertxMicroService {
 
     private static final String APPLICATION_JSON = "application/json";
     private final ObjectMapper objectMapper;
-    private ProjectRepository projectRepository;
-    private PageBuilder pageBuilder;
-    private final File binFolder;
+    private final ListTools listTools;
+    private CreateJob createJob;
+    private ListJobs listJobs;
+    private RunBuild runBuild;
+    private CreateOrUpdateRepository createOrUpdateRepository;
+    private ListRepositories listRepositories;
 
-    public WebconsoleVertx(ObjectMapper objectMapper, PageBuilder pageBuilder, File binFolder, File buildFolder) {
+    public WebconsoleVertx(ObjectMapper objectMapper, File buildFolder) {
         this.objectMapper = objectMapper;
-        this.binFolder = binFolder;
-        this.projectRepository = new ProjectRepository(buildFolder, objectMapper);
-        this.pageBuilder = pageBuilder;
+        this.createJob = new CreateJob(buildFolder);
+        this.listJobs = new ListJobs(buildFolder);
+        this.listTools = new ListTools();
+        this.runBuild = new RunBuild(buildFolder);
+        this.createOrUpdateRepository = new CreateOrUpdateRepository();
+        this.listRepositories = new ListRepositories();
     }
 
     @Override
@@ -61,231 +81,78 @@ public class WebconsoleVertx implements VertxMicroService {
 
         router.route().handler(CorsHandler.create("*").allowedHeaders(allowedHeaders).allowedMethods(allowedMethods));
         router.route().handler(BodyHandler.create());
-        router.route("/html").handler(htmlWelcome());
-        router.route("/html/project/:projectName").handler(htmlProject());
-        router.route("/html/project/:projectName/job/:jobName").handler(htmlJob());
-        router.route("/html/project/:projectName/job/:jobName/build/:buildNumber").handler(htmlBuild());
-        router.get("/project")
+        router.post("/rest/repository")
                 .produces(APPLICATION_JSON)
-                .handler(findProjects());
-        router.post("/project")
+                .handler(createOrUpdateRepositoryV1());
+        router.get("/rest/repository")
                 .produces(APPLICATION_JSON)
-                .handler(createProject());
-        router.get("/project/:projectName")
+                .handler(listRepositoryV1());
+
+        router.get("/rest/tool")
                 .produces(APPLICATION_JSON)
-                .handler(findProject());
-        router.post("/project/:projectName/job")
+                .handler(listToolsV1());
+
+        router.post("/rest/job")
                 .produces(APPLICATION_JSON)
-                .handler(createJob());
-        router.put("/project/:projectName/job/:jobName")
+                .handler(createJobV1());
+        router.get("/rest/job")
                 .produces(APPLICATION_JSON)
-                .handler(updateJob());
-        router.get("/project/:projectName/job/:jobName")
+                .handler(listJobsV1());
+
+        router.post("/rest/build")
                 .produces(APPLICATION_JSON)
-                .handler(findJob());
-        router.post("/project/:projectName/job/:jobName/run")
-                .produces(APPLICATION_JSON)
-                .handler(runJob());
-        router.get("/project/:projectName/job/:jobName/build/:buildNumber")
-                .produces(APPLICATION_JSON)
-                .handler(findBuild());
-        router.get("/project/:projectName/job/:jobName/build/:buildNumber/logs")
+                .handler(runBuildV1());
+
+        router.get("/rest/job/:jobName/build/:buildNumber/logs")
                 .produces(APPLICATION_JSON)
                 .handler(readBuildLogs());
     }
 
-    private Handler<RoutingContext> htmlBuild() {
-        return routingContext -> {
-            HttpServerResponse response = routingContext.response();
-
-            String projectName = routingContext.request().getParam("projectName");
-            String jobName = routingContext.request().getParam("jobName");
-            String buildNumber = routingContext.request().getParam("buildNumber");
-
-            final ProjectDto project = this.projectRepository.findProjectByName(projectName);
-            if (project == null) {
-                response
-                        .setStatusCode(404)
-                        .end();
-                return;
-            }
-
-            final JobDto job = project.getJobs().stream().filter(j -> j.getName().equals(jobName)).findFirst()
-                    .orElse(null);
-
-            if (job == null) {
-                response
-                        .setStatusCode(404)
-                        .end();
-                return;
-            }
-
-            final BuildDto build = job.getBuilds().stream().filter(b -> b.getNumber() == Integer.parseInt(buildNumber)).findFirst()
-                    .orElse(null);
-
-            if (build == null) {
-                response
-                        .setStatusCode(404)
-                        .end();
-                return;
-            }
-
-            response
-                    .putHeader("content-type", "text/html")
-                    .end(pageBuilder.buildBuildPage(project, job, build));
-
-        };
-    }
-
-    private Handler<RoutingContext> htmlJob() {
-        return routingContext -> {
-            HttpServerResponse response = routingContext.response();
-
-            String projectName = routingContext.request().getParam("projectName");
-            String jobName = routingContext.request().getParam("jobName");
-
-            final ProjectDto project = this.projectRepository.findProjectByName(projectName);
-            if (project == null) {
-                response
-                        .setStatusCode(404)
-                        .end();
-                return;
-            }
-
-            final JobDto job = project.getJobs().stream().filter(j -> j.getName().equals(jobName)).findFirst()
-                    .orElse(null);
-
-            if (job == null) {
-                response
-                        .setStatusCode(404)
-                        .end();
-                return;
-            }
-
-            response
-                    .putHeader("content-type", "text/html")
-                    .end(pageBuilder.buildJobPage(project, job));
-        };
-    }
-
-    private Handler<RoutingContext> htmlProject() {
+    private Handler<RoutingContext> listToolsV1() {
         return routingContext -> {
 
-            String projectName = routingContext.request().getParam("projectName");
-
-            final ProjectDto project = this.projectRepository.findProjectByName(projectName);
-            if (project == null) {
-                routingContext.response()
-                        .setStatusCode(404)
-                        .end();
+            List<ToolDto> tools;
+            try {
+                tools = listTools.list();
+            } catch (ListToolException e) {
+                e.printStackTrace();
+                routingContext.response().setStatusCode(500).end();
                 return;
             }
 
-            routingContext.response()
-                    .putHeader("content-type", "text/html")
-                    .end(pageBuilder.buildProjectPage(project));
-        };
-    }
-
-    private Handler<RoutingContext> htmlWelcome() {
-        return routingContext -> {
-
-            List<ProjectDto> projects = this.projectRepository.allProjects();
-            routingContext.response()
-                    .putHeader("content-type", "text/html")
-                    .end(pageBuilder.buildWelcomePage(projects));
-        };
-    }
-
-    private Handler<RoutingContext> runJob() {
-        return rc -> {
-
-            String projectName = rc.request().getParam("projectName");
-            String jobName = rc.request().getParam("jobName");
-
-            final JobDto job = projectRepository.findJobByProjectNameAndJobName(projectName, jobName);
-            if (job != null) {
-
-                final BuildDto build = projectRepository.createBuild(projectName, jobName, job.getProperties());
-
-                List<ShellCommand> commands = new ArrayList<>();
-
-                commands.add(new ShellCommand("sh " + binFolder.getPath() + "/clone-source.sh", new String[] {
-                        build.getProperties().get("project.name"),
-                        build.getProperties().get("job.name"),
-                        build.getProperties().get("build.number"),
-                        build.getProperties().get("git.repository"),
-                        build.getProperties().get("git.branch")}));
-                if(job.getType().equals("maven")) {
-                    commands.add(new ShellCommand("sh " + binFolder.getPath() + "/build-maven.sh", new String[] {
-                            build.getProperties().get("project.name"),
-                            build.getProperties().get("job.name"),
-                            build.getProperties().get("build.number")}));
-                } else if (job.getType().equals("node")) {
-                    commands.add(new ShellCommand("sh " + binFolder.getPath() + "/build-node.sh", new String[] {
-                            build.getProperties().get("project.name"),
-                            build.getProperties().get("job.name"),
-                            build.getProperties().get("build.number")}));
-                }
-                commands.add(new ShellCommand("sh " + binFolder.getPath() + "/build-docker.sh", new String[] {
-                        build.getProperties().get("project.name"),
-                        build.getProperties().get("job.name"),
-                        build.getProperties().get("build.number")}));
-
-                runCommand(projectName, jobName, build, commands, commands.remove(0));
-
+            String json;
+            try {
+                json = objectMapper.writeValueAsString(tools);
+            } catch (IOException e) {
+                e.printStackTrace();
+                routingContext.response().setStatusCode(500).end();
+                return;
             }
 
-            rc.response().setStatusCode(200).end();
+            routingContext.response().setStatusCode(200).putHeader("Content-Type", "application/json").end(json);
 
         };
-    }
-
-    private void runCommand(String projectName, String jobName, BuildDto build, List<ShellCommand> commands,
-            ShellCommand command) {
-        command
-                .run()
-                .subscribe(
-                    success -> {
-                        System.out.println("Task success");
-                    }, error -> {
-                        System.out.println("Job error");
-                        if (error instanceof ExecuteException) {
-                            System.err.println("Job error : Execution failed.");
-                        } else if (error instanceof IOException) {
-                            System.err.println("Job error : Permission denied.");
-                        } else if (error instanceof Exception) {
-                            System.err.println("Job error : " + error.getMessage());
-                        }
-                        projectRepository.updateBuild(projectName, jobName, new BuildDto(build.getNumber(), BuildDto.State.ERROR, build.getProperties()));
-                    },
-                    () -> {
-                        if (commands.isEmpty()) {
-                            projectRepository.updateBuild(projectName, jobName, new BuildDto(build.getNumber(), BuildDto.State.SUCCESS, build.getProperties()));
-                        } else {
-                            runCommand(projectName, jobName, build, commands, commands.remove(0));
-                        }
-                    });
     }
 
     private Handler<RoutingContext> readBuildLogs() {
         return routingContext -> {
 
-            String projectName = routingContext.request().getParam("projectName");
             String jobName = routingContext.request().getParam("jobName");
             String buildNumber = routingContext.request().getParam("buildNumber");
 
-            BuildDto build = this.projectRepository
-                    .findBuildByProjectNameJobNameAndBuildNumber(projectName, jobName,
-                            Integer.parseInt(buildNumber));
-            if (build == null) {
+            final File logFile = new File(
+                    System.getProperty("user.home") + "/webconsole/builds/" + jobName + "/" + buildNumber + ".log");
+
+            if (!logFile.exists()) {
+                routingContext.response().setStatusCode(404).end();
                 return;
             }
 
-
             Observable.<String>create(emitter -> {
                 new Thread(() -> {
-                    while (!routingContext.response().closed()) {
+                    long lastKnownPosition = 0;
+                    long fileLength = logFile.length();
+                    while (lastKnownPosition < fileLength) {
 
                         try {
                             Thread.sleep(800);
@@ -293,13 +160,10 @@ public class WebconsoleVertx implements VertxMicroService {
                             e.printStackTrace();
                         }
 
-                        File logFile = new File(projectRepository.getLogFilePath(projectName, jobName, Integer.parseInt(buildNumber)));
-                        long lastKnownPosition = 0;
                         try {
 
-                            long fileLength = logFile.length();
 
-                            if (fileLength < lastKnownPosition) {
+                            if (lastKnownPosition < lastKnownPosition) {
                                 lastKnownPosition = 0;
                             }
 
@@ -319,9 +183,9 @@ public class WebconsoleVertx implements VertxMicroService {
                         }
 
 
-                        if (build.getState() != BuildDto.State.RUNNING) {
+                        /*if (build.getState() != BuildDto.State.RUNNING) {
                             break;
-                        }
+                        }*/
 
                     }
                     emitter.onComplete();
@@ -341,177 +205,129 @@ public class WebconsoleVertx implements VertxMicroService {
         };
     }
 
-    private Handler<RoutingContext> findProjects() {
+
+    private Handler<RoutingContext> listRepositoryV1() {
         return rc -> {
 
+            List<RepositoryDto> repositories;
             try {
-                rc.response().setStatusCode(200).end(objectMapper.writeValueAsString( projectRepository
-                        .allProjects()));
-            } catch (JsonProcessingException e) {
+                repositories = listRepositories.list();
+            } catch (ListRepositoriesException e) {
                 e.printStackTrace();
                 rc.response().setStatusCode(500).end();
+                return;
             }
 
-        };
-    }
-
-    private Handler<RoutingContext> createProject() {
-        return rc -> {
-
-            final ProjectDto project;
+            String json;
             try {
-                project = objectMapper.readValue(rc.getBodyAsString(), ProjectDto.class);
+                json = objectMapper.writeValueAsString(repositories);
             } catch (IOException e) {
                 e.printStackTrace();
                 rc.response().setStatusCode(500).end();
                 return;
             }
 
-            projectRepository.createProject(project);
-
-            try {
-                rc.response().setStatusCode(200).end(objectMapper.writeValueAsString(project));
-            } catch (JsonProcessingException e) {
-                e.printStackTrace();
-                rc.response().setStatusCode(500).end();
-            }
+            rc.response().setStatusCode(200).putHeader("Content-Type", "application/json").end(json);
 
         };
     }
-
-    private Handler<RoutingContext> findProject() {
+    private Handler<RoutingContext> listJobsV1() {
         return rc -> {
 
-            String projectName = rc.request().getParam("projectName");
-
-            final ProjectDto project = projectRepository
-                    .findProjectByName(projectName);
-            if (project == null) {
-                rc.response()
-                        .setStatusCode(404)
-                        .end();
-                return;
-            }
-
+            List<JobDto> jobs;
             try {
-                rc.response().setStatusCode(200).end(objectMapper.writeValueAsString(project));
-            } catch (JsonProcessingException e) {
+                jobs = listJobs.list();
+            } catch (ListJobsException e) {
                 e.printStackTrace();
-                rc.response().setStatusCode(500).end();
-            }
-
-        };
-    }
-
-    private Handler<RoutingContext> createJob() {
-        return rc -> {
-
-            String projectName = rc.request().getParam("projectName");
-
-            final JobDto job;
-            try {
-                job = objectMapper.readValue(rc.getBodyAsString(), JobDto.class);
-            } catch (IOException e) {
-                e.printStackTrace();
-
                 rc.response().setStatusCode(500).end();
                 return;
             }
 
-            projectRepository.createJob(projectName, job);
-
+            String json;
             try {
-                rc.response().setStatusCode(200).end(objectMapper.writeValueAsString(job));
-            } catch (JsonProcessingException e) {
-                e.printStackTrace();
-                rc.response().setStatusCode(500).end();
-            }
-
-        };
-    }
-
-    private Handler<RoutingContext> findJob() {
-        return rc -> {
-
-            String projectName = rc.request().getParam("projectName");
-            String jobName = rc.request().getParam("jobName");
-
-            final JobDto job = projectRepository
-                    .findJobByProjectNameAndJobName(projectName, jobName);
-            if (job == null) {
-                rc.response()
-                        .setStatusCode(404)
-                        .end();
-                return;
-            }
-
-            try {
-                rc.response().setStatusCode(200).end(objectMapper.writeValueAsString(job));
-            } catch (JsonProcessingException e) {
-                e.printStackTrace();
-                rc.response().setStatusCode(500).end();
-            }
-
-        };
-    }
-
-    private Handler<RoutingContext> updateJob() {
-        return rc -> {
-
-            String projectName = rc.request().getParam("projectName");
-            String jobName = rc.request().getParam("jobName");
-
-            final JobDto newJob;
-            try {
-                newJob = objectMapper.readValue(rc.getBodyAsString(), JobDto.class);
+                json = objectMapper.writeValueAsString(jobs);
             } catch (IOException e) {
                 e.printStackTrace();
                 rc.response().setStatusCode(500).end();
                 return;
             }
 
-            final JobDto job = projectRepository.findJobByProjectNameAndJobName(projectName, jobName);
-            if (job == null) {
-                rc.response()
-                        .setStatusCode(404)
-                        .end();
-                return;
-            }
-
-            projectRepository.createJob(projectName, job);
-
-            try {
-                rc.response().setStatusCode(200).end(objectMapper.writeValueAsString(newJob));
-            } catch (JsonProcessingException e) {
-                e.printStackTrace();
-                rc.response().setStatusCode(500).end();
-            }
+            rc.response().setStatusCode(200).putHeader("Content-Type", "application/json").end(json);
 
         };
     }
 
-    private Handler<RoutingContext> findBuild() {
+    private Handler<RoutingContext> createOrUpdateRepositoryV1() {
         return rc -> {
 
-            String projectName = rc.request().getParam("projectName");
-            String jobName = rc.request().getParam("jobName");
-            String buildNumber = rc.request().getParam("buildNumber");
-
-            final BuildDto build = projectRepository
-                    .findBuildByProjectNameJobNameAndBuildNumber(projectName, jobName, Integer.parseInt(buildNumber));
-            if (build == null) {
-                rc.response()
-                        .setStatusCode(404)
-                        .end();
+            final CreateRepositoryDto createRepositoryDto;
+            try {
+                createRepositoryDto = objectMapper.readValue(rc.getBodyAsString(), CreateRepositoryDto.class);
+            } catch (IOException e) {
+                e.printStackTrace();
+                rc.response().setStatusCode(500).end();
                 return;
             }
 
             try {
-                rc.response().setStatusCode(200).end(objectMapper.writeValueAsString(build));
-            } catch (JsonProcessingException e) {
+                createOrUpdateRepository.createOrUpdate(createRepositoryDto);
+            } catch (CreateRepositoryException e) {
                 e.printStackTrace();
                 rc.response().setStatusCode(500).end();
+                return;
             }
+
+            rc.response().setStatusCode(200).end();
+
+        };
+    }
+
+    private Handler<RoutingContext> createJobV1() {
+        return rc -> {
+
+            final CreateJobDto createJobDto;
+            try {
+                createJobDto = objectMapper.readValue(rc.getBodyAsString(), CreateJobDto.class);
+            } catch (IOException e) {
+                e.printStackTrace();
+                rc.response().setStatusCode(500).end();
+                return;
+            }
+
+            try {
+                createJob.create(createJobDto);
+            } catch (CreateJobException e) {
+                e.printStackTrace();
+                rc.response().setStatusCode(500).end();
+                return;
+            }
+
+            rc.response().setStatusCode(200).end();
+
+        };
+    }
+
+    private Handler<RoutingContext> runBuildV1() {
+        return rc -> {
+
+            final RunBuildDto buildDto;
+            try {
+                buildDto = objectMapper.readValue(rc.getBodyAsString(), RunBuildDto.class);
+            } catch (IOException e) {
+                e.printStackTrace();
+                rc.response().setStatusCode(500).end();
+                return;
+            }
+
+            try {
+                runBuild.run(buildDto);
+            } catch (RunBuildException e) {
+                e.printStackTrace();
+                rc.response().setStatusCode(500).end();
+                return;
+            }
+
+            rc.response().setStatusCode(200).end();
 
         };
     }

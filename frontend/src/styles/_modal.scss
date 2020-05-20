@@ -1,0 +1,32 @@
+@import "~@angular/cdk/overlay-prebuilt.css";
+
+.modal__backdrop {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  backdrop-filter: blur(7px);
+  background-blend-mode: multiply;
+  background-color: rgba(0, 0, 0, 0.6);
+  z-index: 3;
+}
+
+.modal__panel {
+  position: fixed;
+  z-index: 3;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  & > * {
+    position: fixed;
+  }
+
+  &--faded-out {
+    opacity: 0;
+  }
+
+  transition: opacity 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}

@@ -1,0 +1,34 @@
+<div class="repositories">
+  <div class="box" *ngIf="_snapshotRepository !== undefined; else noSnapshotRepositorySpecified">
+    <h3>{{_snapshotRepository.type}}</h3>
+    {{_snapshotRepository.url}}<br/>
+    {{_snapshotRepository.name}}<br/>
+    {{_snapshotRepository.username}}<br/>
+    <input type="button" class="button button-primary" value="Reconfigure" (click)="openCreateRepositoryModal('SNAPSHOT')"/><br/>
+  </div>
+  <ng-template #noSnapshotRepositorySpecified>
+    <div class="box">
+      <p>No SNAPSHOT repository specified.<br/>
+        It should be specified to reserve <br/>
+        application max memory to building <br/>
+        and not to storing.</p>
+      <input type="button" class="button button-primary" value="Configure" (click)="openCreateRepositoryModal('SNAPSHOT')"/><br/>
+    </div>
+  </ng-template>
+  <div class="box" *ngIf="_releaseRepository !== undefined; else noReleaseRepositorySpecified">
+      <h3>{{_releaseRepository.type}}</h3>
+      {{_releaseRepository.url}}<br/>
+      {{_releaseRepository.name}}<br/>
+      {{_releaseRepository.username}}<br/>
+    <input type="button" class="button button-primary" value="Reconfigure" (click)="openCreateRepositoryModal('RELEASE')"/><br/>
+  </div>
+  <ng-template #noReleaseRepositorySpecified>
+    <div class="box">
+      <p>No RELEASE repository specified.<br/>
+        It should be specified to reserve <br/>
+        application max memory to building <br/>
+        and not to storing.</p>
+      <input type="button" class="button button-primary" value="Configure" (click)="openCreateRepositoryModal('RELEASE')"/><br/>
+    </div>
+  </ng-template>
+</div>

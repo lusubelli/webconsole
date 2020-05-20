@@ -1,0 +1,6 @@
+<h1>Dashboard</h1>
+<div>
+  <h2>Jobs</h2>
+  <build-console [build]="selectedBuild"></build-console>
+  <job-list (selectBuild)="setSelectedBuild($event)"></job-list>
+</div>
