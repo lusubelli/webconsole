@@ -1,0 +1,206 @@
+@import "styles/reset";
+@import "styles/fonts";
+@import "styles/colors";
+@import "styles/modal";
+@import "styles/layers";
+
+
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+h1, h2, h3, h4, h5 {
+  padding-bottom: 15px;
+}
+
+form {
+  margin: 10px;
+  padding: 10px;
+}
+
+input[type=text], input[type=url], input[type=password], select {
+  padding: 12px 20px;
+  margin: 8px 0;
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.button {
+  padding: 14px 20px;
+  margin: 8px 0;
+  border: none;
+  cursor: pointer;
+
+  &-primary {
+    background-color: $primary;
+    color: $text-color;
+    &:hover {
+      background-color: $primary-hover;
+    }
+    &-disabled {
+      background-color: $primary-disabled;
+    }
+  }
+
+  &-secondary {
+    background-color: $secondary;
+    color: $text-color;
+    &:hover {
+      background-color: $secondary-hover;
+    }
+    &-disabled {
+      background-color: $secondary-disabled;
+    }
+  }
+
+}
+
+
+.app {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.layer {
+  font-family: $primary-fonts;
+
+
+  & .layer-banner {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+    padding: 10px;
+  }
+
+  & .burger-menu-button {
+    cursor: pointer;
+    padding: 10px 20px;
+    font-size: 1.5em;
+  }
+
+  & .layer-middle {
+
+    & .layer-content {
+      background: linear-gradient($primary, $text-color, $text-color);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+
+      & .layer-page {
+        padding: 20px;
+      }
+      & .layer-footer {
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+      }
+    }
+  }
+
+  & .layer-sidebar {
+    width: 15%;
+    padding: 20px 0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+
+    & .navbar-header {
+      display: flex;
+      padding: 10px 20px;
+
+      & .brand-logo {
+        font-size: 1.5em;
+      }
+    }
+
+    & .navbar-body {
+      & .nav-item {
+        padding: 10px 20px;
+        cursor: pointer;
+
+        &:hover {
+          background-color: $primary;
+          color: $text-color;
+        }
+
+        &-active {
+          border-right: 5px solid $primary;
+        }
+
+      }
+    }
+  }
+
+}
+
+.logo {
+  height: 70px;
+}
+
+.box {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin: 10px;
+  padding: 20px;
+  text-align: center;
+  background-color: $text-color;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+}
+
+.repositories {
+  display: flex;
+  flex-direction: row;
+}
+
+.projects {
+  display: flex;
+  flex-direction: row;
+
+  .jobs {
+    display: flex;
+    flex-direction: column;
+
+    & .builds {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      text-align: left;
+      max-height: 200px;
+      overflow: hidden;
+
+      & .build {
+        display: flex;
+        align-items: center;
+        flex-direction: row;
+        padding: 10px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+        margin-bottom: 5px;
+        text-align: right;
+        cursor: pointer;
+
+        &-status-icon {
+          margin-right: 10px;
+        }
+
+        &-metadata {
+        }
+        &:hover {
+          background-color: grey;
+        }
+
+      }
+
+    }
+
+  }
+}
+
+.build-console {
+  width: 100%;
+  height: 250px;
+}
+
+.controls {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+}

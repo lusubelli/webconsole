@@ -1,0 +1,36 @@
+<div>
+  <div class="projects">
+    <div class="box">
+      <h4>CREATE A JOB</h4>
+      <main>You need to create a job</main>
+      <input type="submit" class="button button-primary" value="Create Job" (click)="openCreateJobModal()"/>
+    </div>
+    <div class="project box" *ngFor="let project of projects() | keyvalue">
+      <h4>{{ project.key | uppercase }}</h4>
+      <div class="jobs">
+        <div *ngFor="let job of project.value">
+          <h5>{{ job.job | uppercase }}</h5>
+          <div class="builds">
+            <div class="build" *ngFor="let build of job.builds" (click)="setSelectedBuild(build)">
+              <div class="build-status-icon" [ngSwitch]="build.state">
+                <i class="fa fa-spinner fa-2x" aria-hidden="true" *ngSwitchCase="'IN_PROGRESS'"></i>
+                <i class="fa fa-exclamation-circle fa-2x" aria-hidden="true" *ngSwitchCase="'FAILURE'"></i>
+                <i class="fa fa-check-circle fa-2x" aria-hidden="true" *ngSwitchCase="'SUCCESS'"></i>
+                <i class="fa fa-question-circle fa-2x" aria-hidden="true" *ngSwitchDefault></i>
+              </div>
+              <div>
+                <span class="build-metadata">{{ build.id }}</span><br/>
+                <span>{{ build.startTime | date:'short' }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="controls">
+            <input type="submit" class="button button-primary" value="Build" (click)="runBuild(job)"/>
+            <input type="submit" class="button button-primary" value="Release" (click)="openRunReleaseModal(job)"/>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

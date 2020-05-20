@@ -1,0 +1,110 @@
+<form class="box" [formGroup]="createJobForm" (ngSubmit)="createJob()">
+  <h3>Create Job</h3>
+
+  <div *ngIf="serverError">
+    <div>{{serverError}}</div>
+  </div>
+
+  <div>
+    <input
+      id="project"
+      formControlName="project"
+      type="text"
+      placeholder="Project Name" />
+    <div *ngIf="createJobForm.controls.project.touched && createJobForm.controls.project.invalid">
+      <div *ngIf="createJobForm.controls.project.errors.required">Project is required.</div>
+      <div *ngIf="createJobForm.controls.project.errors.minlength">Project should be 3 character.</div>
+      <div *ngIf="createJobForm.controls.project.errors.maxlength">Project should be 25 character.</div>
+    </div>
+  </div>
+
+  <div>
+    <input
+      id="job"
+      formControlName="job"
+      type="text"
+      placeholder="Job Name" />
+    <div *ngIf="createJobForm.controls.job.touched && createJobForm.controls.job.invalid">
+      <div *ngIf="createJobForm.controls.job.errors.required">Job is required.</div>
+      <div *ngIf="createJobForm.controls.job.errors.minlength">Job should be 3 character.</div>
+      <div *ngIf="createJobForm.controls.job.errors.maxlength">Job should be 25 character.</div>
+    </div>
+  </div>
+
+  <div>
+    <select
+      id="mavenId"
+      formControlName="mavenId">
+      <option value="" disabled selected hidden>Maven version</option>
+      <option *ngFor="let maven of mavens" value="{{maven.version}}">{{maven.version}}</option>
+    </select>
+    <div *ngIf="createJobForm.controls.mavenId.touched && createJobForm.controls.mavenId.invalid">
+      <div *ngIf="createJobForm.controls.mavenId.errors.required">Maven version is required.</div>
+    </div>
+  </div>
+
+  <div>
+    <select
+      id="javaId"
+      formControlName="javaId">
+      <option value="" disabled selected hidden>Java version</option>
+      <option *ngFor="let java of javas" value="{{java.version}}">{{java.version}}</option>
+    </select>
+    <div *ngIf="createJobForm.controls.javaId.touched && createJobForm.controls.javaId.invalid">
+      <div *ngIf="createJobForm.controls.javaId.errors.required">Java version is required.</div>
+    </div>
+  </div>
+
+  <div>
+    <input
+      id="gitRepository"
+      formControlName="gitRepository"
+      type="text"
+      placeholder="Git repository" />
+    <div *ngIf="createJobForm.controls.gitRepository.touched && createJobForm.controls.gitRepository.invalid">
+      <div *ngIf="createJobForm.controls.gitRepository.errors.required">Git repository is required.</div>
+      <div *ngIf="createJobForm.controls.gitRepository.errors.pattern">Git repository should be an url.</div>
+    </div>
+  </div>
+
+  <div formGroupName="snapshot">
+    <input
+      id="snapshot.branch"
+      formControlName="branch"
+      type="text"
+      placeholder="Git Snapshot Branch"/>
+    <div *ngIf="snapshotFormGroup.controls.branch.touched && snapshotFormGroup.controls.branch.invalid">
+      <div *ngIf="snapshotFormGroup.controls.branch.errors.required">Git Snapshot Branch is required.</div>
+      <div *ngIf="snapshotFormGroup.controls.branch.errors.minlength">Git Snapshot Branch should be 3 character.</div>
+      <div *ngIf="snapshotFormGroup.controls.branch.errors.maxlength">Git Snapshot Branch should be 25 character.</div>
+    </div>
+  </div>
+
+  <div formGroupName="release">
+    <input
+      id="release.branch"
+      formControlName="branch"
+      type="text"
+      placeholder="Git Release Branch"/>
+    <div *ngIf="releaseFormGroup.controls.branch.touched && releaseFormGroup.controls.branch.invalid">
+      <div *ngIf="releaseFormGroup.controls.branch.errors.required">Git Release Branch is required.</div>
+      <div *ngIf="releaseFormGroup.controls.branch.errors.minlength">Git Release Branch should be 3 character.</div>
+      <div *ngIf="releaseFormGroup.controls.branch.errors.maxlength">Git Release Branch should be 25 character.</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <input
+      type="button"
+      class="button button-secondary"
+      value="Cancel"
+      (click)="cancel()" />
+    <input
+      type="submit"
+      class="button button-primary"
+      value="Create Job"
+      [class.button-primary-disabled]="!createJobForm.valid"
+      [disabled]="!createJobForm.valid" />
+  </div>
+
+</form>
