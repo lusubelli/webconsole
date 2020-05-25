@@ -1,0 +1,8 @@
+<form class="box" [formGroup]="runReleaseBuildForm" (ngSubmit)="runReleaseBuild()">
+  <h3>Run Release Build</h3>
+  <input name="releaseVersion" type="text" placeholder="Git Release Tag"/>
+  <div class="controls">
+    <input type="button" class="button button-secondary" value="Cancel" (click)="cancel()"/>
+    <input type="submit" class="button button-primary" value="Release"/>
+  </div>
+</form>
