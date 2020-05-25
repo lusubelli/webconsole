@@ -2,13 +2,13 @@
 *.iml
 .m2/
 .idea/
-build/
+# build/
 target/
 tools/
 logs/
 
 package-lock.json
-frontend/node_modules/**
+/frontend/node_modules/
 
 
 # See http://help.github.com/ignore-files/ for more about ignoring files.
